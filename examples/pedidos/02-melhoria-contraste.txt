@@ -1,0 +1,1 @@
+melhoria: aumentar o contraste do texto de confirmação da doação

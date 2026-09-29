@@ -1,0 +1,1 @@
+bug: botão de pagar não responde no celular

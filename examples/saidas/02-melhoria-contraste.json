@@ -1,0 +1,131 @@
+{
+  "schema_version": "1",
+  "fabrica_version": "0.2.0",
+  "pedido": "melhoria: aumentar o contraste do texto de confirmação da doação",
+  "resultado": "publicado",
+  "resultado_descricao": "Publicada após aprovação e revisão.",
+  "issue": {
+    "title": "Aumentar o contraste do texto de confirmação da doação",
+    "summary": "O texto da confirmação da doação fica abaixo do contraste mínimo. O corte seguro é ajustar só essa cor.",
+    "problem": "O texto da tela de confirmação da doação tem contraste insuficiente. Parte das pessoas não consegue ler o comprovante.",
+    "expected_result": "O texto principal da confirmação atinge contraste de pelo menos 4,5:1 com o fundo, e o restante da tela permanece igual.",
+    "smallest_increment": "Trocar apenas a cor do texto de confirmação, e do fundo se isso for indispensável para o contraste, sem redesenhar a tela.",
+    "out_of_scope": [
+      "Redesenhar a tela de confirmação.",
+      "Incluir campos novos no comprovante.",
+      "Alterar o fluxo de pagamento ou o botão Pagar."
+    ],
+    "risks": [
+      "Escurecer o texto pode colidir com um fundo de sucesso que também seja escuro.",
+      "Mudar um token de cor global afetaria telas fora do perímetro."
+    ],
+    "acceptance_criteria": [
+      "Dado a tela de confirmação, quando o texto principal é medido sobre o fundo, então a razão de contraste é de pelo menos 4,5:1.",
+      "Dado um leitor de tela, quando a confirmação abre, então o texto continua sendo anunciado com o mesmo conteúdo.",
+      "Dado o restante do aplicativo, quando a correção é aplicada, então botões e telas fora da confirmação permanecem iguais."
+    ],
+    "type_label": "melhoria",
+    "area_label": "acessibilidade",
+    "priority": "P3",
+    "priority_reason": "acessibilidade",
+    "source_request": "melhoria: aumentar o contraste do texto de confirmação da doação"
+  },
+  "design": {
+    "do_not_touch": [
+      "Fluxo de pagamento e botão Pagar.",
+      "Ordem e estrutura dos elementos da confirmação.",
+      "Textos cujo contraste já atende 4,5:1."
+    ],
+    "ui_changes": [
+      "Ajustar a cor do texto principal da confirmação para um token com contraste de pelo menos 4,5:1.",
+      "Não usar a cor como única indicação de sucesso."
+    ],
+    "copy_pt_br": [
+      {
+        "onde": "Título da confirmação",
+        "texto": "Doação confirmada"
+      },
+      {
+        "onde": "Corpo",
+        "texto": "Sua doação foi registrada. Guarde este comprovante."
+      },
+      {
+        "onde": "Ação secundária",
+        "texto": "Voltar ao início"
+      }
+    ],
+    "accessibility": [
+      "WCAG 2.1 AA — contraste mínimo de 4,5:1 para texto normal (critério 1.4.3).",
+      "WCAG 2.1 AA — nome, função e estado disponíveis para tecnologia assistiva (critério 4.1.2).",
+      "WCAG 2.1 AA — operação por teclado e foco visível (critérios 2.1.1 e 2.4.7).",
+      "WCAG 2.1 AA — a informação não depende só de cor (critério 1.4.1)."
+    ],
+    "fontes": [
+      "adrs_do_aplicativo.md#adr-3-confirmacao-separada-do-checkout",
+      "checklist_wcag.md#contraste",
+      "guia_de_copy.md#estados-do-pagamento"
+    ]
+  },
+  "plano_de_implementacao": {
+    "files_and_areas": [
+      "app/confirmacao/Confirmacao.module.css — cor do texto principal.",
+      "app/confirmacao/tokens.css — token de cor usado só na confirmação.",
+      "app/confirmacao/contraste.test.ts — medição do contraste e regressão das outras telas."
+    ],
+    "test_plan": [
+      "CA1. Dado a tela de confirmação, quando o texto principal é medido sobre o fundo, então a razão de contraste é de pelo menos 4,5:1.",
+      "CA2. Dado um leitor de tela, quando a confirmação abre, então o texto continua sendo anunciado com o mesmo conteúdo.",
+      "CA3. Dado o restante do aplicativo, quando a correção é aplicada, então botões e telas fora da confirmação permanecem iguais."
+    ],
+    "pr_evidence": [
+      "Testes automatizados dos critérios CA citados passando no CI.",
+      "Captura ou log que mostre o comportamento novo dentro do perímetro.",
+      "Nota no PR listando o que não foi alterado, alinhada ao perímetro de design."
+    ],
+    "notes": "Plano para o aplicativo de doações de exemplo. Este agente não altera repositório nenhum; descreve o que o PR deveria conter."
+  },
+  "revisao": {
+    "verdict": "aprovado",
+    "target": "nenhum",
+    "findings": [
+      "Pacote cobre os critérios de aceite e respeita o perímetro."
+    ],
+    "fontes": [
+      "padroes_de_criterios.md#formato-dado-quando-entao",
+      "adrs_do_aplicativo.md#adr-3-confirmacao-separada-do-checkout",
+      "padroes_de_criterios.md#perimetro-no-criterio"
+    ]
+  },
+  "registro_de_status": [
+    {
+      "agent": "produto",
+      "status": "issue especificada",
+      "detail": "P3 · melhoria · acessibilidade — Aumentar o contraste do texto de confirmação da doação"
+    },
+    {
+      "agent": "product owner",
+      "status": "aprovado",
+      "detail": "Issue aprovada para design."
+    },
+    {
+      "agent": "design",
+      "status": "especificação de design pronta",
+      "detail": "3 itens no perímetro."
+    },
+    {
+      "agent": "dev",
+      "status": "plano de implementação pronto",
+      "detail": "3 testes planejados."
+    },
+    {
+      "agent": "revisão",
+      "status": "revisão aprovada",
+      "detail": "Pacote cobre os critérios de aceite e respeita o perímetro."
+    },
+    {
+      "agent": "fábrica",
+      "status": "publicado",
+      "detail": "Issue publicada em Markdown e JSON."
+    }
+  ]
+}

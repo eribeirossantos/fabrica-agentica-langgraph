@@ -1,0 +1,137 @@
+{
+  "schema_version": "1",
+  "fabrica_version": "0.2.0",
+  "pedido": "bug: botão de pagar não responde no celular",
+  "resultado": "publicado",
+  "resultado_descricao": "Publicada após aprovação e revisão.",
+  "issue": {
+    "title": "Botão de pagar não responde no celular",
+    "summary": "O toque em Pagar no celular não inicia a doação. O corte seguro é corrigir só esse disparo.",
+    "problem": "No celular, o botão de pagar da tela de checkout não inicia o pagamento. A pessoa toca e nada acontece, então a doação não é registrada.",
+    "expected_result": "Ao tocar uma vez em Pagar no celular, o pagamento inicia, o botão mostra carregamento e a doação segue para a confirmação, sem cobrança duplicada.",
+    "smallest_increment": "Corrigir apenas o disparo do pagamento no toque móvel, sem redesenhar o checkout nem incluir meio de pagamento novo.",
+    "out_of_scope": [
+      "Redesenhar o layout do checkout.",
+      "Adicionar ou remover meios de pagamento.",
+      "Alterar valor, recibo ou mensagens posteriores à confirmação."
+    ],
+    "risks": [
+      "Trocar o evento de clique em vez de complementar o toque pode quebrar o desktop.",
+      "Sem idempotência, toques repetidos durante o carregamento criam doações duplicadas."
+    ],
+    "acceptance_criteria": [
+      "Dado um celular com o checkout aberto, quando a pessoa toca uma vez em Pagar, então o pagamento inicia e o botão entra em carregamento em até um segundo.",
+      "Dado o pagamento confirmado, quando a resposta de sucesso chega, então a doação aparece registrada e a tela de confirmação é exibida.",
+      "Dado um toque extra enquanto o botão está em carregamento, quando o primeiro toque já foi aceito, então só uma doação é criada."
+    ],
+    "type_label": "bug",
+    "area_label": "checkout",
+    "priority": "P1",
+    "priority_reason": "não perder transação ou doação",
+    "source_request": "bug: botão de pagar não responde no celular"
+  },
+  "design": {
+    "do_not_touch": [
+      "Meios de pagamento e o contrato da API de cobrança.",
+      "Cálculo do valor da doação.",
+      "Navegação global, cabeçalho e rodapé.",
+      "Conteúdo da tela de confirmação, fora o estado que o botão dispara."
+    ],
+    "ui_changes": [
+      "O botão Pagar ganha estado de carregamento no toque, com indicação visível.",
+      "Toques adicionais durante o carregamento não disparam outra cobrança.",
+      "O foco permanece no botão até a ida para a confirmação."
+    ],
+    "copy_pt_br": [
+      {
+        "onde": "Botão principal",
+        "texto": "Pagar doação"
+      },
+      {
+        "onde": "Estado de carregamento",
+        "texto": "Pagamento em andamento"
+      },
+      {
+        "onde": "Erro recuperável",
+        "texto": "Não foi possível pagar. Tente de novo. Nenhuma cobrança extra foi feita."
+      },
+      {
+        "onde": "Confirmação",
+        "texto": "Doação registrada"
+      }
+    ],
+    "accessibility": [
+      "WCAG 2.1 AA — contraste mínimo de 4,5:1 para texto normal (critério 1.4.3).",
+      "WCAG 2.1 AA — nome, função e estado disponíveis para tecnologia assistiva (critério 4.1.2).",
+      "WCAG 2.1 AA — operação por teclado e foco visível (critérios 2.1.1 e 2.4.7).",
+      "WCAG 2.1 AA — a informação não depende só de cor (critério 1.4.1)."
+    ],
+    "fontes": [
+      "adrs_do_aplicativo.md#adr-1-cobranca-idempotente",
+      "guia_de_copy.md#estados-do-pagamento",
+      "checklist_wcag.md#contraste"
+    ]
+  },
+  "plano_de_implementacao": {
+    "files_and_areas": [
+      "app/checkout/PayButton.tsx — toque e estado de carregamento.",
+      "app/checkout/payment-client.ts — não iniciar segunda cobrança enquanto a primeira não termina.",
+      "app/checkout/PayButton.test.tsx — testes dos critérios de aceite."
+    ],
+    "test_plan": [
+      "CA1. Dado um celular com o checkout aberto, quando a pessoa toca uma vez em Pagar, então o pagamento inicia e o botão entra em carregamento em até um segundo.",
+      "CA2. Dado o pagamento confirmado, quando a resposta de sucesso chega, então a doação aparece registrada e a tela de confirmação é exibida.",
+      "CA3. Dado um toque extra enquanto o botão está em carregamento, quando o primeiro toque já foi aceito, então só uma doação é criada."
+    ],
+    "pr_evidence": [
+      "Testes automatizados dos critérios CA citados passando no CI.",
+      "Captura ou log que mostre o comportamento novo dentro do perímetro.",
+      "Nota no PR listando o que não foi alterado, alinhada ao perímetro de design."
+    ],
+    "notes": "Plano para o aplicativo de doações de exemplo. Este agente não altera repositório nenhum; descreve o que o PR deveria conter."
+  },
+  "revisao": {
+    "verdict": "aprovado",
+    "target": "nenhum",
+    "findings": [
+      "Pacote cobre os critérios de aceite e respeita o perímetro."
+    ],
+    "fontes": [
+      "padroes_de_criterios.md#formato-dado-quando-entao",
+      "guia_de_copy.md#estados-do-pagamento",
+      "padroes_de_criterios.md#perimetro-no-criterio"
+    ]
+  },
+  "registro_de_status": [
+    {
+      "agent": "produto",
+      "status": "issue especificada",
+      "detail": "P1 · bug · checkout — Botão de pagar não responde no celular"
+    },
+    {
+      "agent": "product owner",
+      "status": "aprovado",
+      "detail": "Issue aprovada para design."
+    },
+    {
+      "agent": "design",
+      "status": "especificação de design pronta",
+      "detail": "4 itens no perímetro."
+    },
+    {
+      "agent": "dev",
+      "status": "plano de implementação pronto",
+      "detail": "3 testes planejados."
+    },
+    {
+      "agent": "revisão",
+      "status": "revisão aprovada",
+      "detail": "Pacote cobre os critérios de aceite e respeita o perímetro."
+    },
+    {
+      "agent": "fábrica",
+      "status": "publicado",
+      "detail": "Issue publicada em Markdown e JSON."
+    }
+  ]
+}
