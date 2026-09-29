@@ -47,6 +47,8 @@ fabrica = ["py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# A raiz precisa estar no path: o script ``pytest`` do CI não inclui o diretório atual.
+pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py311"
