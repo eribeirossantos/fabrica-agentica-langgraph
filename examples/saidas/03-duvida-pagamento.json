@@ -1,0 +1,117 @@
+{
+  "schema_version": "1",
+  "fabrica_version": "0.1.0",
+  "pedido": "dúvida: o que acontece com a doação se o pagamento falhar?",
+  "resultado": "publicado",
+  "resultado_descricao": "Publicada após aprovação e revisão.",
+  "issue": {
+    "title": "O que acontece com a doação se o pagamento falhar?",
+    "summary": "A falha de pagamento não explica se a doação foi registrada. O corte seguro é uma frase nesse estado de erro.",
+    "problem": "Quando o pagamento falha, a pessoa não sabe se a doação foi registrada nem se o valor será cobrado de novo.",
+    "expected_result": "A tela de falha diz, em uma frase, que a doação não foi registrada e que nenhuma cobrança extra foi feita, e oferece tentar de novo.",
+    "smallest_increment": "Incluir somente a mensagem de falha no estado de erro do pagamento, sem mudar a regra de cobrança.",
+    "out_of_scope": [
+      "Retentativa automática do pagamento.",
+      "Troca de meio de pagamento ou de regra de cobrança.",
+      "Fluxo novo de estorno."
+    ],
+    "risks": [
+      "A frase 'nenhuma cobrança extra' precisa ser verdadeira para os meios já existentes.",
+      "Um texto longo demais empurra a ação de tentar de novo para fora da primeira dobra no celular."
+    ],
+    "acceptance_criteria": [
+      "Dado um pagamento recusado, quando a falha é exibida, então a pessoa lê que a doação não foi registrada.",
+      "Dado a mesma falha, quando a mensagem aparece, então ela informa que não houve cobrança extra.",
+      "Dado a mensagem de falha, quando a pessoa aciona Tentar de novo, então o checkout reabre sem criar uma segunda doação."
+    ],
+    "type_label": "duvida",
+    "area_label": "checkout",
+    "priority": "P4",
+    "priority_reason": "clareza para o usuário",
+    "source_request": "dúvida: o que acontece com a doação se o pagamento falhar?"
+  },
+  "design": {
+    "do_not_touch": [
+      "Regra de cobrança e meios de pagamento.",
+      "Tela de sucesso da doação.",
+      "Navegação global."
+    ],
+    "ui_changes": [
+      "No estado de falha do pagamento, mostrar a explicação antes da ação de tentar de novo.",
+      "Manter a ação Tentar de novo visível sem rolagem no celular."
+    ],
+    "copy_pt_br": [
+      {
+        "onde": "Mensagem de falha",
+        "texto": "A doação não foi registrada. Nenhuma cobrança extra foi feita."
+      },
+      {
+        "onde": "Ação",
+        "texto": "Tentar de novo"
+      }
+    ],
+    "accessibility": [
+      "WCAG 2.1 AA — contraste mínimo de 4,5:1 para texto normal (critério 1.4.3).",
+      "WCAG 2.1 AA — nome, função e estado disponíveis para tecnologia assistiva (critério 4.1.2).",
+      "WCAG 2.1 AA — operação por teclado e foco visível (critérios 2.1.1 e 2.4.7).",
+      "WCAG 2.1 AA — a informação não depende só de cor (critério 1.4.1)."
+    ]
+  },
+  "plano_de_implementacao": {
+    "files_and_areas": [
+      "app/checkout/PaymentFailure.tsx — mensagem do estado de erro.",
+      "app/checkout/mensagens.ts — copy final da falha.",
+      "app/checkout/PaymentFailure.test.tsx — testes dos critérios de aceite."
+    ],
+    "test_plan": [
+      "CA1. Dado um pagamento recusado, quando a falha é exibida, então a pessoa lê que a doação não foi registrada.",
+      "CA2. Dado a mesma falha, quando a mensagem aparece, então ela informa que não houve cobrança extra.",
+      "CA3. Dado a mensagem de falha, quando a pessoa aciona Tentar de novo, então o checkout reabre sem criar uma segunda doação."
+    ],
+    "pr_evidence": [
+      "Testes automatizados dos critérios CA citados passando no CI.",
+      "Captura ou log que mostre o comportamento novo dentro do perímetro.",
+      "Nota no PR listando o que não foi alterado, alinhada ao perímetro de design."
+    ],
+    "notes": "Plano para o aplicativo de doações de exemplo. Este agente não altera repositório nenhum; descreve o que o PR deveria conter."
+  },
+  "revisao": {
+    "verdict": "aprovado",
+    "target": "nenhum",
+    "findings": [
+      "Pacote cobre os critérios de aceite e respeita o perímetro."
+    ]
+  },
+  "registro_de_status": [
+    {
+      "agent": "produto",
+      "status": "issue especificada",
+      "detail": "P4 · dúvida · checkout — O que acontece com a doação se o pagamento falhar?"
+    },
+    {
+      "agent": "product owner",
+      "status": "aprovado",
+      "detail": "Issue aprovada para design."
+    },
+    {
+      "agent": "design",
+      "status": "especificação de design pronta",
+      "detail": "3 itens no perímetro."
+    },
+    {
+      "agent": "dev",
+      "status": "plano de implementação pronto",
+      "detail": "3 testes planejados."
+    },
+    {
+      "agent": "revisão",
+      "status": "revisão aprovada",
+      "detail": "Pacote cobre os critérios de aceite e respeita o perímetro."
+    },
+    {
+      "agent": "fábrica",
+      "status": "publicado",
+      "detail": "Issue publicada em Markdown e JSON."
+    }
+  ]
+}

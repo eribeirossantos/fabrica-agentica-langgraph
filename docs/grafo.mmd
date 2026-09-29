@@ -1,0 +1,20 @@
+flowchart TD
+    __start__([início])
+    product["Produto"]
+    approval["Aprovação humana"]
+    design["Design"]
+    dev["Dev"]
+    review["Revisão"]
+    publish["Publicação"]
+    __end__([fim])
+    __start__ --> product
+    approval -->|"aprova"| design
+    approval -->|"rejeita"| product
+    approval -->|"limite de rejeições"| publish
+    design --> dev
+    dev --> review
+    product --> approval
+    publish --> __end__
+    review -->|"devolver ao design"| design
+    review -->|"devolver ao dev"| dev
+    review -->|"aprova ou encerra no limite"| publish
