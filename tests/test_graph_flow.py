@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from tests.fakes import ScriptedModel
-
 from fabrica.graph import MAX_REVIEW_ITERATIONS
 from fabrica.runner import execute
 from fabrica.schemas import ProductDraft
 from fabrica.stub import StubModel
+from tests.fakes import ScriptedModel
 
 PEDIDO = "bug: botão de pagar não responde no celular"
 
