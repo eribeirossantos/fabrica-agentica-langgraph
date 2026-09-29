@@ -1,0 +1,50 @@
+[
+  {
+    "id": "bug-pagar",
+    "pedido": "bug: botão de pagar não responde no celular",
+    "tipo": "bug",
+    "prioridade": "P1"
+  },
+  {
+    "id": "contraste",
+    "pedido": "melhoria: aumentar o contraste do texto de confirmação da doação",
+    "tipo": "melhoria",
+    "prioridade": "P3"
+  },
+  {
+    "id": "duvida-pagamento",
+    "pedido": "dúvida: o que acontece com a doação se o pagamento falhar?",
+    "tipo": "duvida",
+    "prioridade": "P4"
+  },
+  {
+    "id": "vazamento-url",
+    "pedido": "dúvida: o cpf aparece na url compartilhada?",
+    "tipo": "duvida",
+    "prioridade": "P2"
+  },
+  {
+    "id": "divida",
+    "pedido": "dívida: extrair o cliente HTTP duplicado do legado",
+    "tipo": "divida",
+    "prioridade": "P5"
+  },
+  {
+    "id": "icone",
+    "pedido": "melhoria: alinhar o ícone da doação",
+    "tipo": "melhoria",
+    "prioridade": "P5"
+  },
+  {
+    "id": "erro-pix",
+    "pedido": "bug: mensagem de erro do pix é só erro 500",
+    "tipo": "bug",
+    "prioridade": "P4"
+  },
+  {
+    "id": "risco-log",
+    "pedido": "bug: cpf do doador aparece no log público",
+    "tipo": "risco",
+    "prioridade": "P2"
+  }
+]

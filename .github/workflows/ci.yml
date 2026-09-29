@@ -24,3 +24,15 @@ jobs:
         run: pytest
         env:
           FABRICA_OFFLINE: "1"
+          FABRICA_DATABASE_URL: "sqlite://"
+          FABRICA_CHECKPOINTER: memory
+          FABRICA_VECTOR_STORE: memory
+          FABRICA_EMBEDDINGS: fake
+          OTEL_TRACES_EXPORTER: none
+
+  imagem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem
+        run: docker build -t fabrica-agentica:ci .

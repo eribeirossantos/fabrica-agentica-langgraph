@@ -14,6 +14,11 @@ from fabrica.runner import execute
 
 def main(argv: list[str] | None = None) -> int:
     """Ponto de entrada. Devolve o código de saída do processo."""
+    args_list = list(sys.argv[1:] if argv is None else argv)
+    if args_list[:1] == ["evals"]:
+        from fabrica.evals.runner import run_cli
+
+        return run_cli(args_list[1:])
     parser = argparse.ArgumentParser(
         prog="fabrica",
         description="Transforma um pedido em uma issue priorizada e especificada.",
@@ -49,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Imprime o diagrama Mermaid do grafo e encerra.",
     )
-    args = parser.parse_args(argv)
+    args = parser.parse_args(args_list)
     if args.diagrama:
         print(readable_mermaid(), end="")
         return 0

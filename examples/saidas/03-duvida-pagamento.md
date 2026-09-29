@@ -66,6 +66,12 @@ Incluir somente a mensagem de falha no estado de erro do pagamento, sem mudar a 
 - WCAG 2.1 AA — operação por teclado e foco visível (critérios 2.1.1 e 2.4.7).
 - WCAG 2.1 AA — a informação não depende só de cor (critério 1.4.1).
 
+### Fontes
+
+- guia_de_copy.md#estados-do-pagamento
+- guia_de_copy.md#tom-da-interface
+- padroes_de_criterios.md#formato-dado-quando-entao
+
 ## Plano de implementação
 
 Plano para o aplicativo de doações de exemplo. Este agente não altera repositório nenhum; descreve o que o PR deveria conter.
@@ -94,6 +100,12 @@ Plano para o aplicativo de doações de exemplo. Este agente não altera reposit
 - **Destino:** nenhum
 
 - Pacote cobre os critérios de aceite e respeita o perímetro.
+
+### Fontes
+
+- padroes_de_criterios.md#formato-dado-quando-entao
+- guia_de_copy.md#estados-do-pagamento
+- padroes_de_criterios.md#perimetro-no-criterio
 
 ## Registro de status
 

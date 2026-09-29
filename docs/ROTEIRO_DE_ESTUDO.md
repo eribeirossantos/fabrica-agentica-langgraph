@@ -14,7 +14,7 @@ Mapa mental, da plataforma para o código:
 | Aprovação humana | `interrupt` no nó `approval` |
 | Memória da execução | Estado do grafo + checkpointer + `thread_id` |
 | Canal de status | `status_log` com redutor de lista |
-| Ferramenta | Ainda não há tool; o exercício da semana 1 adiciona a primeira |
+| Ferramenta | `@tool buscar_conhecimento` em `src/fabrica/tools.py` |
 
 ## Semana 1 — modelo, mensagem, tool e saída estruturada
 
@@ -29,9 +29,9 @@ Mapa mental, da plataforma para o código:
 - Tools no guia de agentes: [configuração básica de agente](https://langchain-ai.github.io/langgraph/how-tos/create-react-agent/) e [saída estruturada no agente](https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/).
 - Runnable. A documentação antiga de LCEL foi reorganizada e o endereço antigo não abre mais uma página própria. O que continua valendo: um runnable é uma unidade com `invoke`. Na fábrica, esse contrato é `invoke(schema, system, user)`, implementado pelo stub e por `LangChainModel`. A composição com estado e desvio fica no grafo, não numa corrente de pipes.
 
-**No repositório.** Leia `src/fabrica/schemas.py`, `src/fabrica/llm.py` e `src/fabrica/stub.py`. Rode `python -m fabrica --auto-approve "bug: botão de pagar não responde no celular"` e compare com `examples/saidas/01-bug-pagar.md`.
+**No repositório.** Leia `src/fabrica/schemas.py`, `src/fabrica/llm.py`, `src/fabrica/prompts.py` e `src/fabrica/stub.py`. Os prompts são `ChatPromptTemplate`. O modo com API usa `with_structured_output` no mesmo schema que o stub preenche. A tool visível é `buscar_conhecimento`. Rode `python -m fabrica --auto-approve "bug: botão de pagar não responde no celular"` e compare com `examples/saidas/01-bug-pagar.md`.
 
-**Exercício.** Crie uma tool `normalize_request` que devolve prefixo e corpo (`split_prefix` já existe). No modo online, faça o nó de produto chamá-la antes do structured output. Mantenha o stub capaz de responder sem rede, e acrescente um teste que não usa chave. Não mova a prioridade para dentro da tool: a semana 1 não afrouxa a política.
+**Exercício.** Crie uma tool `normalize_request` que devolve prefixo e corpo (`split_prefix` já existe). No modo online, faça o nó de produto chamá-la antes do structured output. Mantenha o stub capaz de responder sem rede, e acrescente um teste que não usa chave. Não mova a prioridade para dentro da tool: a semana 1 não afrouxa a política. Compare com `buscar_conhecimento`: ela devolve trecho e citação, e o nó é quem grava `fontes`.
 
 ## Semana 2 — grafo de estado, aresta condicional e checkpointer
 
@@ -49,7 +49,7 @@ Mapa mental, da plataforma para o código:
 
 **No repositório.** `src/fabrica/state.py`, `src/fabrica/graph.py` e `tests/test_routing.py`. Gere o diagrama com `python -m fabrica --diagrama` e confira que `docs/grafo.mmd` mudou se você acrescentar um nó.
 
-**Exercício.** Adicione um nó `triage` antes de `product` que só normaliza o pedido e publica uma linha no `status_log`. A aresta seguinte continua indo para produto. Atualize o teste das arestas e regenere `docs/grafo.mmd`. Como segundo passo, troque o `MemorySaver` por um checkpointer que grave em disco e rode a CLI duas vezes com o mesmo `thread_id` para ver o fio retomado. Comece pela página de persistência; não invente um formato paralelo de histórico.
+**Exercício.** Adicione um nó `triage` antes de `product` que só normaliza o pedido e publica uma linha no `status_log`. A aresta seguinte continua indo para produto. Atualize o teste das arestas e regenere `docs/grafo.mmd`. Como segundo passo, troque o checkpointer. `src/fabrica/persistence/checkpointer.py` já escolhe memória, SQLite ou Postgres por `FABRICA_CHECKPOINTER`. Rode duas vezes com o mesmo `thread_id` num saver que grave em disco. Comece pela página de persistência; não invente um formato paralelo de histórico. A issue consultável pela API fica no SQLAlchemy, separada do checkpoint.
 
 ## Semana 3 — humano no laço, memória e vários agentes
 
@@ -81,11 +81,11 @@ Compare, por escrito, em dez linhas: por que esta fábrica não usa um superviso
 - Avaliação: [conceitos](https://docs.smith.langchain.com/evaluation), [visão de avaliação](https://docs.smith.langchain.com/evaluation/concepts), [avaliar uma aplicação](https://docs.smith.langchain.com/evaluation/how_to_guides), [quickstart](https://docs.smith.langchain.com/evaluation/tutorials) e [pytest](https://docs.smith.langchain.com/cookbook/testing-examples/pytest).
 - Subir o grafo: [deployment](https://langchain-ai.github.io/langgraph/tutorials/deployment/), [estrutura da aplicação](https://langchain-ai.github.io/langgraph/concepts/application_structure/), [CLI](https://langchain-ai.github.io/langgraph/concepts/langgraph_cli/), [Agent Server](https://langchain-ai.github.io/langgraph/concepts/langgraph_server/) e [Studio](https://langchain-ai.github.io/langgraph/cloud/how-tos/studio/quick_start/).
 
-**No repositório.** Os três pedidos em `examples/pedidos/` já são um conjunto mínimo de avaliação da política: tipo e prioridade esperados estão em `tests/test_policy.py`. O CI (`.github/workflows/ci.yml`) é o "deploy" honesto desta fase: lint e teste offline em Python 3.11 e 3.12.
+**No repositório.** `knowledge/` é o manual. `src/fabrica/rag` ingere, corta e busca. Design e revisão citam a fonte. `make evals` roda `src/fabrica/evals`. A API está em `src/fabrica/api`, o servidor MCP em `src/fabrica/mcp_server.py`, o trace em `src/fabrica/telemetry.py`. O CI faz lint, teste offline e build da imagem em Python 3.11 e 3.12.
 
-**Exercício.** Monte um eval pequeno da classificação com os pedidos de `examples/pedidos/` mais os casos da tabela de `tests/test_policy.py`. A métrica é acerto de tipo e de prioridade, não nota de estilo. Se tiver chave do LangSmith, rastreie uma corrida `--online` e anote o `thread_id`. Sem chave, o pytest que já existe é a avaliação. Como passo de deploy, descreva num parágrafo como o grafo subiria com a CLI oficial, sem criar um servidor paralelo neste repositório até você precisar dele.
+**Exercício.** Rode `make evals` e leia as quatro métricas. Acrescente um pedido ao `dataset.json` com tipo e prioridade que a política já cobre, e veja a nota cair se você errar o esperado. Se tiver chave do LangSmith, rode uma corrida `--online` com `LANGSMITH_TRACING=true` e anote o `thread_id`. Sem chave, `OTEL_TRACES_EXPORTER=console` mostra o span de cada nó. Suba a API com `make run-api` ou `docker compose up --build` e aprove um pedido com os `curl` do README.
 
-RAG, quando for a hora: um nó opcional que busca trechos de um manual fictício do aplicativo de doações antes do agente de produto. O manual é arquivo do próprio repo. A resposta da issue continua obrigada a citar o que veio da busca. Não use isso para furar a política de prioridade.
+O RAG desta fábrica busca antes de design e de revisão, não antes do produto, de propósito: a prioridade continua na política. A issue cita o arquivo e a seção. Não use o trecho recuperado para furar essa regra.
 
 ## Perguntas de entrevista
 
@@ -112,11 +112,23 @@ O stub implementa o mesmo método do chat model e devolve os schemas. O CI expor
 **O que impede o ciclo de revisão de nunca acabar?**
 A aresta. Se o veredito não é `aprovado` e `review_iterations` chegou ao teto, o destino é `publish`, com resultado `encerrado_no_limite` e os achados no Markdown. O teste `test_revisao_para_no_limite` conta as chamadas ao dev e exige que seja exatamente o teto, não mais.
 
-**Onde entraria RAG?**
-Num nó anterior ao produto, com um manual versionado do aplicativo de doações, devolvendo trechos para o prompt. A prioridade continuaria na política. O tutorial de referência é o de agentic RAG linkado na semana 4.
+**Onde está o RAG, e por que ele não escolhe a prioridade?**
+Em `knowledge/` e no retriever usado por design e revisão. A citação fica em `fontes`. Tipo e prioridade continuam em `policy.py`. O tutorial de referência é o de agentic RAG linkado na semana 4. O embedding padrão é determinístico, para o teste rodar sem chave. Pgvector é a opção quando o compose sobe o Postgres.
 
 **Como você provaria que a classificação não regrediu?**
-Com a tabela de `tests/test_policy.py` no CI e, quando houver LangSmith, com um eval dos mesmos casos. A métrica é tipo e prioridade. Estilo de redação não entra nessa nota.
+Com a tabela de `tests/test_policy.py` no CI e com `make evals`, que mede tipo, prioridade, critérios presentes e perímetro respeitado. Estilo de redação não entra nessa nota. LangSmith entra quando houver chave; o dataset offline já existe.
 
 **O que você colocaria em produção primeiro?**
-Checkpointer fora da memória do processo, segredo só em ambiente, tracing sem gravar a chave, e o mesmo modo offline para o teste de regressão. O grafo em si já é o artefato. O passo de deployment está na semana 4; este repo ainda não sobe um servidor, de propósito.
+Checkpointer Postgres, issue no SQLAlchemy, canal de status no Redis, segredo só em ambiente, trace por nó sem gravar a chave, e o mesmo modo offline para o teste de regressão. A API e o servidor MCP já sobem esse grafo. O que ainda falta está nos próximos passos.
+
+**Por que a API e o MCP chamam o mesmo serviço?**
+Porque o fio do grafo é um só. `FactoryService` inicia o pedido, lê a fase e retoma o `interrupt`. HTTP e MCP são portas. Duplicar o grafo em cada porta faria a aprovação divergir.
+
+**Como você troca o modelo de um agente sem mexer no outro?**
+Com `DESIGN_LLM_PROVIDER` e o par de modelo, caindo em `LLM_PROVIDER` quando o específico está vazio. Azure é mais um provedor, com endpoint e deployment no ambiente. `FABRICA_OFFLINE=1` devolve o stub para todos.
+
+## Próximos passos
+
+- **Kubernetes e Helm.** Chart com API, Postgres e Redis, probe em `/health`, segredo fora da imagem e volume ou serviço gerenciado para o checkpointer.
+- **CrewAI ou AutoGen.** Úteis quando os especialistas negociam a rota. Nesta fábrica a rota é conhecida; o exercício é explicar em voz alta quando o grafo fixo deixa de ser a melhor escolha.
+- **Arquitetura orientada a eventos.** O Redis já publica o status. O passo seguinte é um consumidor para notificação e auditoria, e um pedido que não precise segurar a conexão HTTP até o fim do grafo.

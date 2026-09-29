@@ -2,9 +2,13 @@
 
 O modelo preenche a narrativa. Tipo, área e prioridade já vêm calculados
 pela política e são repetidos aqui só para o texto ficar coerente com eles.
+Os prompts são ``ChatPromptTemplate``: o sistema fica fixo e o JSON do
+pedido entra na mensagem humana.
 """
 
 from __future__ import annotations
+
+from langchain_core.prompts import ChatPromptTemplate
 
 PRODUCT_SYSTEM = """\
 Você é o agente de produto de uma fábrica de software.
@@ -60,3 +64,22 @@ O plano tem:
 
 Se houver feedback de revisão, cubra o que faltou sem inventar escopo novo.
 """
+
+PRODUCT_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", PRODUCT_SYSTEM),
+        ("human", "{payload}"),
+    ]
+)
+DESIGN_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", DESIGN_SYSTEM),
+        ("human", "{payload}"),
+    ]
+)
+DEV_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", DEV_SYSTEM),
+        ("human", "{payload}"),
+    ]
+)

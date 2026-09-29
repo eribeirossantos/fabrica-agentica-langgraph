@@ -8,8 +8,10 @@ status da decisão só é gravado depois que a resposta chega.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from typing import Any
 
+from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
@@ -22,12 +24,15 @@ from fabrica.policy import (
     prioritize_request,
     split_prefix,
 )
-from fabrica.prompts import DESIGN_SYSTEM, DEV_SYSTEM, PRODUCT_SYSTEM
+from fabrica.prompts import DESIGN_PROMPT, DEV_PROMPT, PRODUCT_PROMPT
+from fabrica.rag.retriever import get_retriever
 from fabrica.render import render_document, render_markdown
 from fabrica.review_checks import evaluate_package
 from fabrica.schemas import DesignSpec, DevPlan, ProductDraft
 from fabrica.state import FactoryState
 from fabrica.stub import StubModel
+from fabrica.telemetry import span
+from fabrica.tools import buscar_conhecimento
 
 MAX_APPROVAL_ROUNDS = 3
 MAX_REVIEW_ITERATIONS = 3
@@ -91,11 +96,23 @@ def route_after_review(state: FactoryState) -> str:
     return "dev"
 
 
-def build_graph(model: Any = None, checkpointer: Any = None):
-    """Compila o grafo. Sem checkpointer informado, usa memória do processo."""
-    model = model or StubModel()
+def build_graph(
+    model: Any = None,
+    checkpointer: Any = None,
+    *,
+    models: dict[str, Any] | None = None,
+    retriever: Any = None,
+):
+    """Compila o grafo. Sem checkpointer informado, usa memória do processo.
+
+    ``model`` único vale para todos os agentes (é o que os testes injetam).
+    ``models`` permite um provedor diferente por papel quando ``model`` não vem.
+    """
+    role_models = _role_models(model, models)
     if checkpointer is None:
         checkpointer = InMemorySaver()
+    if retriever is None:
+        retriever = get_retriever()
 
     def product(state: FactoryState) -> dict[str, Any]:
         raw = state["raw_request"]
@@ -104,22 +121,19 @@ def build_graph(model: Any = None, checkpointer: Any = None):
         priority, reason = prioritize_request(raw, issue_type)
         area = infer_area(raw)
         _prefix, body = split_prefix(raw)
-        draft = model.invoke(
-            ProductDraft,
-            PRODUCT_SYSTEM,
-            json.dumps(
-                {
-                    "request": raw,
-                    "body": body,
-                    "feedback": feedback,
-                    "type_label": issue_type,
-                    "priority": priority,
-                    "priority_reason": reason,
-                    "area_label": area,
-                },
-                ensure_ascii=False,
-            ),
+        system, user = _render(
+            PRODUCT_PROMPT,
+            {
+                "request": raw,
+                "body": body,
+                "feedback": feedback,
+                "type_label": issue_type,
+                "priority": priority,
+                "priority_reason": reason,
+                "area_label": area,
+            },
         )
+        draft = role_models["product"].invoke(ProductDraft, system, user)
         issue = draft.model_dump()
         mark = f"Ajuste pedido pelo product owner: {feedback}" if feedback else ""
         if mark and mark not in issue["problem"]:
@@ -179,16 +193,27 @@ def build_graph(model: Any = None, checkpointer: Any = None):
 
     def design(state: FactoryState) -> dict[str, Any]:
         feedback = state.get("design_feedback") or ""
-        spec = model.invoke(
-            DesignSpec,
-            DESIGN_SYSTEM,
-            json.dumps(
-                {"issue": state.get("issue") or {}, "feedback": feedback},
-                ensure_ascii=False,
-            ),
+        issue = state.get("issue") or {}
+        assunto = " ".join(
+            str(issue.get(key) or "") for key in ("title", "problem", "expected_result")
         )
+        fontes, conhecimento = _collect_sources(
+            retriever,
+            [
+                f"{assunto} tom de voz copy botão português",
+                f"{assunto} WCAG 2.1 contraste acessibilidade",
+            ],
+        )
+        buscar_conhecimento.invoke({"consulta": f"{assunto} copy WCAG"})
+        system, user = _render(
+            DESIGN_PROMPT,
+            {"issue": issue, "feedback": feedback, "conhecimento": conhecimento},
+        )
+        spec = role_models["design"].invoke(DesignSpec, system, user)
+        data = spec.model_dump()
+        data["fontes"] = fontes
         return {
-            "design_spec": spec.model_dump(),
+            "design_spec": data,
             "status_log": [
                 {
                     "agent": "design",
@@ -200,18 +225,15 @@ def build_graph(model: Any = None, checkpointer: Any = None):
 
     def dev(state: FactoryState) -> dict[str, Any]:
         feedback = state.get("dev_feedback") or ""
-        plan = model.invoke(
-            DevPlan,
-            DEV_SYSTEM,
-            json.dumps(
-                {
-                    "issue": state.get("issue") or {},
-                    "design": state.get("design_spec") or {},
-                    "feedback": feedback,
-                },
-                ensure_ascii=False,
-            ),
+        system, user = _render(
+            DEV_PROMPT,
+            {
+                "issue": state.get("issue") or {},
+                "design": state.get("design_spec") or {},
+                "feedback": feedback,
+            },
         )
+        plan = role_models["dev"].invoke(DevPlan, system, user)
         return {
             "dev_plan": plan.model_dump(),
             "status_log": [
@@ -224,11 +246,17 @@ def build_graph(model: Any = None, checkpointer: Any = None):
         }
 
     def review(state: FactoryState) -> dict[str, Any]:
-        result = evaluate_package(
-            state.get("issue") or {},
-            state.get("design_spec") or {},
-            state.get("dev_plan") or {},
+        issue = state.get("issue") or {}
+        criteria = " ".join(issue.get("acceptance_criteria") or [])
+        fontes, _conhecimento = _collect_sources(
+            retriever,
+            [
+                f"{criteria} dado quando então critério de aceite",
+                "perímetro respeitado decisão de arquitetura",
+            ],
         )
+        buscar_conhecimento.invoke({"consulta": f"{criteria} critério de aceite perímetro"})
+        result = evaluate_package(issue, state.get("design_spec") or {}, state.get("dev_plan") or {})
         if result.verdict == "aprovado":
             status = "revisão aprovada"
             detail = result.findings[0]
@@ -238,8 +266,10 @@ def build_graph(model: Any = None, checkpointer: Any = None):
         else:
             status = "devolvido para dev"
             detail = "; ".join(result.findings)
+        review_data = result.model_dump()
+        review_data["fontes"] = fontes
         updates: dict[str, Any] = {
-            "review": result.model_dump(),
+            "review": review_data,
             "review_iterations": state.get("review_iterations", 0) + 1,
             "status_log": [{"agent": "revisão", "status": status, "detail": detail}],
         }
@@ -263,12 +293,12 @@ def build_graph(model: Any = None, checkpointer: Any = None):
         }
 
     builder = StateGraph(FactoryState)
-    builder.add_node("product", product)
-    builder.add_node("approval", approval)
-    builder.add_node("design", design)
-    builder.add_node("dev", dev)
-    builder.add_node("review", review)
-    builder.add_node("publish", publish)
+    builder.add_node("product", _traced("product", product))
+    builder.add_node("approval", _traced("approval", approval))
+    builder.add_node("design", _traced("design", design))
+    builder.add_node("dev", _traced("dev", dev))
+    builder.add_node("review", _traced("review", review))
+    builder.add_node("publish", _traced("publish", publish))
     builder.add_edge(START, "product")
     builder.add_edge("product", "approval")
     builder.add_conditional_edges(
@@ -327,6 +357,52 @@ def _node_line(node_id: str) -> str:
     if node_id in {"__start__", "__end__"}:
         return f"    {node_id}([{label}])"
     return f'    {node_id}["{label}"]'
+
+
+def _role_models(model: Any, models: dict[str, Any] | None) -> dict[str, Any]:
+    roles = ("product", "design", "dev", "review")
+    if model is not None:
+        return {role: model for role in roles}
+    fallback = StubModel()
+    if not models:
+        return {role: fallback for role in roles}
+    return {role: models.get(role, fallback) for role in roles}
+
+
+def _render(prompt: ChatPromptTemplate, payload: dict[str, Any]) -> tuple[str, str]:
+    rendered = prompt.format_messages(payload=json.dumps(payload, ensure_ascii=False))
+    return str(rendered[0].content), str(rendered[1].content)
+
+
+def _collect_sources(retriever: Any, queries: list[str], limit: int = 3) -> tuple[list[str], str]:
+    """Junta citações de cada consulta, sem deixar a primeira esgotar o limite."""
+    fontes: list[str] = []
+    blocks: list[str] = []
+    seen: set[str] = set()
+    per_query = 2
+    for query in queries:
+        taken = 0
+        for document in retriever.invoke(query):
+            citation = str(document.metadata.get("citation") or "")
+            if not citation or citation in seen:
+                continue
+            seen.add(citation)
+            fontes.append(citation)
+            blocks.append(f"[{citation}]\n{document.page_content}")
+            taken += 1
+            if len(fontes) >= limit or taken >= per_query:
+                break
+        if len(fontes) >= limit:
+            break
+    return fontes, "\n\n".join(blocks)
+
+
+def _traced(node_name: str, fn: Callable[[FactoryState], dict[str, Any]]) -> Callable[[FactoryState], dict[str, Any]]:
+    def wrapped(state: FactoryState) -> dict[str, Any]:
+        with span(f"fabrica.graph.{node_name}", node=node_name):
+            return fn(state)
+
+    return wrapped
 
 
 def _outcome(state: FactoryState) -> str:

@@ -42,6 +42,10 @@ class DesignSpec(BaseModel):
     ui_changes: list[str] = Field(description="Mudanças de interface dentro do perímetro.")
     copy_pt_br: list[CopyBlock] = Field(description="Copy final em português do Brasil.")
     accessibility: list[str] = Field(description="Requisitos WCAG 2.1 AA aplicáveis.")
+    fontes: list[str] = Field(
+        default_factory=list,
+        description="Citações da base de conhecimento usadas nesta especificação.",
+    )
 
 
 class DevPlan(BaseModel):
@@ -61,3 +65,7 @@ class ReviewResult(BaseModel):
     verdict: Literal["aprovado", "devolver"]
     target: Literal["design", "dev", "nenhum"]
     findings: list[str] = Field(description="Achados objetivos da revisão.")
+    fontes: list[str] = Field(
+        default_factory=list,
+        description="Citações da base de conhecimento usadas nesta revisão.",
+    )

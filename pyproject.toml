@@ -1,12 +1,12 @@
 [project]
 name = "fabrica-agentica"
-version = "0.1.0"
+version = "0.2.0"
 description = "Fábrica de software agêntica: do pedido à issue especificada, com LangGraph."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Eduardo Ribeiro" }]
-keywords = ["langgraph", "langchain", "agentes"]
+keywords = ["langgraph", "langchain", "agentes", "fastapi", "mcp"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -18,6 +18,14 @@ dependencies = [
     "langchain-core>=0.3",
     "pydantic>=2",
     "python-dotenv>=1.0",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "httpx>=0.27",
+    "sqlalchemy>=2",
+    "opentelemetry-api>=1.27",
+    "opentelemetry-sdk>=1.27",
+    "mcp>=1.10,<2",
+    "langchain-mcp-adapters>=0.1",
 ]
 
 [project.optional-dependencies]
@@ -26,9 +34,20 @@ llm = [
     "langchain-anthropic>=0.3",
     "langchain-google-genai>=2",
 ]
+infra = [
+    "psycopg[binary,pool]>=3.2",
+    "langgraph-checkpoint-postgres>=2",
+    "langgraph-checkpoint-sqlite>=2",
+    "redis>=5",
+    "pgvector>=0.3",
+    "opentelemetry-exporter-otlp-proto-http>=1.27",
+]
 dev = [
     "pytest>=8",
     "ruff>=0.6",
+]
+typing = [
+    "mypy>=1.13",
 ]
 
 [project.scripts]
@@ -42,11 +61,14 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-fabrica = ["py.typed"]
+fabrica = ["py.typed", "evals/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not integration'"
+markers = [
+    "integration: depende de Postgres, Redis ou outro serviço externo",
+]
 # A raiz precisa estar no path: o script ``pytest`` do CI não inclui o diretório atual.
 pythonpath = ["."]
 
@@ -57,3 +79,10 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["fabrica"]
+ignore_missing_imports = true
+warn_unused_ignores = false

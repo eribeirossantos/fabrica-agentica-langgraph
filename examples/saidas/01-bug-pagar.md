@@ -70,6 +70,12 @@ Corrigir apenas o disparo do pagamento no toque móvel, sem redesenhar o checkou
 - WCAG 2.1 AA — operação por teclado e foco visível (critérios 2.1.1 e 2.4.7).
 - WCAG 2.1 AA — a informação não depende só de cor (critério 1.4.1).
 
+### Fontes
+
+- adrs_do_aplicativo.md#adr-1-cobranca-idempotente
+- guia_de_copy.md#estados-do-pagamento
+- checklist_wcag.md#contraste
+
 ## Plano de implementação
 
 Plano para o aplicativo de doações de exemplo. Este agente não altera repositório nenhum; descreve o que o PR deveria conter.
@@ -98,6 +104,12 @@ Plano para o aplicativo de doações de exemplo. Este agente não altera reposit
 - **Destino:** nenhum
 
 - Pacote cobre os critérios de aceite e respeita o perímetro.
+
+### Fontes
+
+- padroes_de_criterios.md#formato-dado-quando-entao
+- guia_de_copy.md#estados-do-pagamento
+- padroes_de_criterios.md#perimetro-no-criterio
 
 ## Registro de status
 

@@ -127,6 +127,9 @@ def render_markdown(state: dict[str, Any]) -> str:
             lines.append("- (sem copy)")
         lines.extend(["", "### Acessibilidade (WCAG 2.1 AA)", ""])
         lines.append(_bullets(design.get("accessibility") or []))
+        fontes = design.get("fontes") or []
+        if fontes:
+            lines.extend(["", "### Fontes", "", _bullets(fontes)])
         lines.append("")
 
     plan = state.get("dev_plan") or {}
@@ -158,7 +161,11 @@ def render_markdown(state: dict[str, Any]) -> str:
         target = review.get("target") or "nenhum"
         lines.append(f"- **Veredito:** {review.get('verdict', '')}")
         lines.append(f"- **Destino:** {target}")
-        lines.extend(["", _bullets(review.get("findings") or []), ""])
+        lines.extend(["", _bullets(review.get("findings") or [])])
+        fontes = review.get("fontes") or []
+        if fontes:
+            lines.extend(["", "### Fontes", "", _bullets(fontes)])
+        lines.append("")
 
     lines.extend(["## Registro de status", "", format_status_log(state.get("status_log") or []), ""])
     return "\n".join(lines)

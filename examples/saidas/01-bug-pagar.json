@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "fabrica_version": "0.1.0",
+  "fabrica_version": "0.2.0",
   "pedido": "bug: botão de pagar não responde no celular",
   "resultado": "publicado",
   "resultado_descricao": "Publicada após aprovação e revisão.",
@@ -65,6 +65,11 @@
       "WCAG 2.1 AA — nome, função e estado disponíveis para tecnologia assistiva (critério 4.1.2).",
       "WCAG 2.1 AA — operação por teclado e foco visível (critérios 2.1.1 e 2.4.7).",
       "WCAG 2.1 AA — a informação não depende só de cor (critério 1.4.1)."
+    ],
+    "fontes": [
+      "adrs_do_aplicativo.md#adr-1-cobranca-idempotente",
+      "guia_de_copy.md#estados-do-pagamento",
+      "checklist_wcag.md#contraste"
     ]
   },
   "plano_de_implementacao": {
@@ -90,6 +95,11 @@
     "target": "nenhum",
     "findings": [
       "Pacote cobre os critérios de aceite e respeita o perímetro."
+    ],
+    "fontes": [
+      "padroes_de_criterios.md#formato-dado-quando-entao",
+      "guia_de_copy.md#estados-do-pagamento",
+      "padroes_de_criterios.md#perimetro-no-criterio"
     ]
   },
   "registro_de_status": [

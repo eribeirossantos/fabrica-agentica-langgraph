@@ -9,8 +9,9 @@ from typing import Any
 from langgraph.types import Command
 
 from fabrica.graph import build_graph
-from fabrica.llm import build_model
+from fabrica.llm import build_models
 from fabrica.state import FactoryState
+from fabrica.telemetry import configure_observability
 
 Approver = Callable[[dict[str, Any]], dict[str, str]]
 
@@ -49,10 +50,11 @@ def execute(
     on_status: Callable[[dict[str, str]], None] | None = None,
 ) -> FactoryState:
     """Roda o fluxo. Sem ``auto_approve`` nem ``approver``, pergunta no terminal."""
-    graph = build_graph(
-        model=model if model is not None else build_model(offline=offline),
-        checkpointer=checkpointer,
-    )
+    configure_observability()
+    if model is not None:
+        graph = build_graph(model=model, checkpointer=checkpointer)
+    else:
+        graph = build_graph(models=build_models(offline=offline), checkpointer=checkpointer)
     config = {"configurable": {"thread_id": thread_id or str(uuid.uuid4())}, "recursion_limit": 50}
     graph.invoke(initial_state(raw_request), config)
     seen = 0
